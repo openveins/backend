@@ -1,42 +1,41 @@
-package xyz.rynav.openveinsapi.exceptions.auth;
+package xyz.rynav.openveinsapi.exceptions.Auth;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import xyz.rynav.openveinsapi.exceptions.DTO.ErrorResponse;
+import xyz.rynav.openveinsapi.exceptions.DTO.ValidationErrorResponse;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
-// Custom Auth Exception
-public class AuthException extends RuntimeException {
-    public AuthException(String message) {
-        super(message);
-    }
-}
-
-// Global Exception Handler
+@Slf4j
 @RestControllerAdvice
-class GlobalExceptionHandler {
+public class GlobalExceptionHandler {
 
-    @ExceptionHandler(AuthException.class)
+
+    @ExceptionHandler(value = AuthException.class)
     public ResponseEntity<ErrorResponse> handleAuthException(AuthException ex) {
+        log.warn("Auth exception [{}]: {}", ex.getStatus(), ex.getMessage());
+
         ErrorResponse error = new ErrorResponse(
-                HttpStatus.BAD_REQUEST.value(),
+                ex.getStatus().value(),
                 ex.getMessage(),
                 LocalDateTime.now()
         );
-        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(error, ex.getStatus());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ValidationErrorResponse> handleValidationException(
             MethodArgumentNotValidException ex) {
+        log.debug("Validation failed for request: {}", ex.getBindingResult().getObjectName());
+
         Map<String, String> errors = new HashMap<>();
         ex.getBindingResult().getAllErrors().forEach(error -> {
             String fieldName = ((FieldError) error).getField();
@@ -55,6 +54,8 @@ class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(Exception ex) {
+        log.error("Unhandled exception: ", ex);
+
         ErrorResponse error = new ErrorResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
                 "An unexpected error occurred",
@@ -62,22 +63,4 @@ class GlobalExceptionHandler {
         );
         return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
     }
-}
-
-// Error Response DTOs
-@Data
-@AllArgsConstructor
-class ErrorResponse {
-    private int status;
-    private String message;
-    private LocalDateTime timestamp;
-}
-
-@Data
-@AllArgsConstructor
-class ValidationErrorResponse {
-    private int status;
-    private String message;
-    private Map<String, String> errors;
-    private LocalDateTime timestamp;
 }

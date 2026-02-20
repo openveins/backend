@@ -19,9 +19,9 @@ public class LoginRequest {
     private String email;
 
     @NotBlank(message = "Password is required")
-    @Size(min = 10, max = 64, message = "A password must be between 10 and 64 characters")
+    @Size(min = 16, max = 128, message = "A password must be between 16 and 128 characters")
     private String password;
 
     @NotBlank(message = "Captcha token is required")
-    private String captchaToken;
+    private String captcha;
 }

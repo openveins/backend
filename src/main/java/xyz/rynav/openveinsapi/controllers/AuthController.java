@@ -22,9 +22,8 @@ public class AuthController {
     private final AuthService authService;
 
 
-    // TODO: Add Login path
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request){
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) throws InterruptedException {
         AuthResponse response = authService.login(request);
         return ResponseEntity.ok(response);
     }
