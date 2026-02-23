@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestBody;
 import xyz.rynav.openveinsapi.DTOs.Configs.ConfigPatchRequest;
 import xyz.rynav.openveinsapi.DTOs.Configs.ConfigPatchResponse;
+import xyz.rynav.openveinsapi.DTOs.Configs.PrivateConfigResponse;
 import xyz.rynav.openveinsapi.DTOs.Configs.PublicAuthConfig;
 import xyz.rynav.openveinsapi.models.Config;
 import xyz.rynav.openveinsapi.repositories.ConfigRepository;
@@ -26,7 +27,7 @@ public class ConfigService {
     @Autowired
     private ConfigRepository configRepository;
 
-    private Logger logger = LogManager.getLogger(ConfigService.class.getName());
+    private final Logger logger = LogManager.getLogger(ConfigService.class.getName());
 
 
     // Always fail = 2x00000000000000000000AB
@@ -42,7 +43,6 @@ public class ConfigService {
     }
 
 
-    // TODO: ADD AUTH
     public ConfigPatchResponse patchConfig(@Valid @RequestBody ConfigPatchRequest payload) {
 
         if(payload.getUpdates() == null ||  payload.getUpdates().isEmpty()){
@@ -67,5 +67,12 @@ public class ConfigService {
         }
 
         return ConfigPatchResponse.builder().warnings(warnings).updated(updated).build();
+    }
+
+    public PrivateConfigResponse getConfig(){
+
+        List<Config> configs = configRepository.findAll();
+
+        return PrivateConfigResponse.builder().configList(configs).build();
     }
 }
