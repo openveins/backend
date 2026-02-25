@@ -28,7 +28,7 @@ public class AuthService {
     private final static Logger logger = Logger.getLogger(AuthResponse.class.getName());
 
     @Transactional
-    public AuthResponse register(RegisterRequest request) {
+    public AuthResponse register(RegisterRequest request) throws Exception {
         if (!cloudflareTurnstileService.verifyCaptchaToken(request.getCaptcha())) {
             throw new AuthException("Captcha Token is invalid!");
         }
@@ -54,7 +54,7 @@ public class AuthService {
         return AuthResponse.builder().token(token).message("Account created successfully.").build();
     }
 
-    public AuthResponse login(LoginRequest request) throws InterruptedException {
+    public AuthResponse login(LoginRequest request) throws Exception {
 
         logger.info(request.toString());
 
