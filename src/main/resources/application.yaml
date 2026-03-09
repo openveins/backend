@@ -1,0 +1,47 @@
+spring:
+  config:
+    import: optional:file:.env[.properties]
+
+  application:
+    name: openveins-api
+
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASS}
+
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      password: ${REDIS_PASS}
+      ssl:
+        enabled: ${REDIS_SSL:false}
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 10
+          max-idle: 5
+          min-idle: 1
+
+
+server:
+  tomcat:
+    connection-timeout: 20s
+
+turnstile:
+  private_key: ${TURNSTILE_PRIVATEKEY}
+
+jwt:
+  secret: ${JWT_SECRET}
+
+totp:
+  encryption-key: ${TOTP_ENCRYPTIONKEY}

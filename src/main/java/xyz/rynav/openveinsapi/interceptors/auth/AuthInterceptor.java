@@ -45,7 +45,6 @@ public class AuthInterceptor implements HandlerInterceptor {
             throw new AuthException("Invalid token.", HttpStatus.UNAUTHORIZED);
         }
 
-
         return true;
     }
 

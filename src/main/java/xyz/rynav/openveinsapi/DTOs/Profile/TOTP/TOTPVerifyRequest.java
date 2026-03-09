@@ -1,4 +1,4 @@
-package xyz.rynav.openveinsapi.DTOs.Auth;
+package xyz.rynav.openveinsapi.DTOs.Profile.TOTP;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,8 +9,6 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AuthResponse {
-    private String token;
-    private boolean otpRequired;
-    private String message;
+public class TOTPVerifyRequest {
+    private String code;
 }

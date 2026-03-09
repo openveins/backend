@@ -42,6 +42,5 @@ public class User {
     protected void onUpdate(){
         updatedAt = LocalDateTime.now();
     }
-
 }
 
