@@ -14,6 +14,8 @@ import java.util.HashMap;
 public class DataSeeder implements ApplicationRunner {
 
     private final ConfigRepository configRepository;
+
+    // TODO - Update the seeder to use a different, more flexible system.
     private static final HashMap<String, String> DEFAULT_SETTINGS = new HashMap<String, String>() {{
         put("cloudflare_turnstile_enabled", "false");
         put("cloudflare_turnstile_siteKey", "1x00000000000000000000AA");

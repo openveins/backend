@@ -23,22 +23,18 @@ public class ConfigController {
 
     @GetMapping("/auth")
     public ResponseEntity<PublicAuthConfig> getAuthConfig() {
-        PublicAuthConfig response = configService.getPublicAuthConfig();
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(configService.getPublicAuthConfig());
     }
 
     @AuthRequired
     @PatchMapping
     public ResponseEntity<ConfigPatchResponse> patchConfig(@Valid @RequestBody ConfigPatchRequest payload) {
-        ConfigPatchResponse response = configService.patchConfig(payload);
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(configService.patchConfig(payload));
     }
 
     @AuthRequired
     @GetMapping
     public ResponseEntity<PrivateConfigResponse> getConfig() {
-        PrivateConfigResponse response = configService.getConfig();
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(configService.getConfig());
     }
 }

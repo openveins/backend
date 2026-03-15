@@ -11,5 +11,4 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class OTPRequest {
     private String code;
-    private String token;
 }

@@ -4,8 +4,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import xyz.rynav.openveinsapi.DTOs.Profile.TOTP.TOTPEnableResponse;
 import xyz.rynav.openveinsapi.DTOs.Profile.TOTP.TOTPRequest;
 import xyz.rynav.openveinsapi.DTOs.Profile.TOTP.TOTPVerifyRequest;
@@ -31,8 +31,7 @@ public class ProfileService {
     private final JwtService jwtService;
 
     @Transactional
-    public TOTPEnableResponse enable2fa(@Valid @RequestBody TOTPRequest request, @RequestHeader("Authorization") String authHeader) throws Exception {
-        String token = authHeader.replace("Bearer ", "");
+    public TOTPEnableResponse enable2fa(@Valid @RequestBody TOTPRequest request, @Valid @CookieValue("auth_token") String token) throws Exception {
         String userId = jwtService.getSubject(token);
 
         User user = userRepository.findById(userId).orElseThrow(() -> new Exception("Invalid Token."));
@@ -62,8 +61,7 @@ public class ProfileService {
     }
 
     @Transactional
-    public TOTPVerifyResponse verify2fa(@Valid @RequestBody TOTPVerifyRequest request, @RequestHeader("Authorization") String authHeader) throws Exception {
-        String token = authHeader.replace("Bearer ", "");
+    public TOTPVerifyResponse verify2fa(@Valid @RequestBody TOTPVerifyRequest request,  @Valid @CookieValue("auth_token") String token) throws Exception {
         String userId = jwtService.getSubject(token);
 
         User user = userRepository.findById(userId).orElseThrow(() -> new Exception("Invalid Token."));
@@ -73,7 +71,6 @@ public class ProfileService {
         if(response){
             return TOTPVerifyResponse.builder()
                     .message("Successfully enabled 2FA!")
-                    .data(Map.of("token", jwtService.generateToken(user)))
                     .success(true)
                     .build();
         }

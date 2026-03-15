@@ -32,14 +32,29 @@ public class ConfigService {
 
     // Always fail = 2x00000000000000000000AB
     // Always pass = 1x00000000000000000000AA
-    // TODO: Improve this function, this is just a quick hack.
-    public PublicAuthConfig getPublicAuthConfig(){
+    
+    public PublicAuthConfig getPublicAuthConfig() {
 
         Optional<Config> cloudflareSiteKey = configRepository.findByConfigName("cloudflare_turnstile_siteKey");
         Optional<Config> cloudflareEnabled = configRepository.findByConfigName("cloudflare_turnstile_enabled");
         Optional<Config> signupEnabled = configRepository.findByConfigName("signup_enabled");
 
-        return PublicAuthConfig.builder().turnstileEnabled(cloudflareEnabled.isPresent() && Boolean.parseBoolean(cloudflareEnabled.get().getConfigValue())).turnstileSiteKey(cloudflareSiteKey.isPresent() ? cloudflareSiteKey.get().getConfigValue() : "").message("Success").signupEnabled(signupEnabled.isPresent() && Boolean.parseBoolean(signupEnabled.get().getConfigValue())).build();
+        boolean isTurnstileEnabled = cloudflareEnabled.isPresent()
+                && Boolean.parseBoolean(cloudflareEnabled.get().getConfigValue());
+
+        boolean isSignupEnabled = signupEnabled.isPresent()
+                && Boolean.parseBoolean(signupEnabled.get().getConfigValue());
+
+        String siteKey = cloudflareSiteKey
+                .map(Config::getConfigValue)
+                .orElse("");
+
+        return PublicAuthConfig.builder()
+                .turnstileEnabled(isTurnstileEnabled)
+                .turnstileSiteKey(siteKey)
+                .signupEnabled(isSignupEnabled)
+                .message("Success")
+                .build();
     }
 
 

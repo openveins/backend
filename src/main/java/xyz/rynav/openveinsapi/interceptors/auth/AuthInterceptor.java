@@ -1,5 +1,6 @@
 package xyz.rynav.openveinsapi.interceptors.auth;
 
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,21 +35,26 @@ public class AuthInterceptor implements HandlerInterceptor {
             return true;
         }
 
-        String token = request.getHeader("Authorization");
+        String token = null;
+        Cookie[] cookies = request.getCookies();
+        if(cookies != null){
+            for (Cookie cookie : cookies) {
+                if(cookie.getName().equals("auth_token")){
+                    token = cookie.getValue();
+                }
+            }
+        }else{
+            throw new AuthException("Invalid token", HttpStatus.UNAUTHORIZED);
+        }
 
-        logger.info(token);
-        if(token == null || !isValidToken(token)) {
+        if(token == null) {
             throw new AuthException("Invalid token.", HttpStatus.UNAUTHORIZED);
         }
 
-        if(!jwtService.validateToken(token.split(" ")[1])) {
+        if(!jwtService.validateToken(token)) {
             throw new AuthException("Invalid token.", HttpStatus.UNAUTHORIZED);
         }
 
         return true;
-    }
-
-    private boolean isValidToken(String token) {
-        return token.startsWith("Bearer ") && token.length() > 7;
     }
 }

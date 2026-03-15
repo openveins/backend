@@ -20,17 +20,13 @@ public class ProfileController {
 
     @PatchMapping("/2fa")
     @AuthRequired
-    public ResponseEntity<TOTPEnableResponse> enable2fa(@Valid @RequestBody TOTPRequest request, @RequestHeader("Authorization") String token) throws Exception {
-        final TOTPEnableResponse response = profileService.enable2fa(request, token);
-
-        return ResponseEntity.ok(response);
+    public ResponseEntity<TOTPEnableResponse> enable2fa(@Valid @RequestBody TOTPRequest request, @Valid @CookieValue("auth_token") String token) throws Exception {
+        return ResponseEntity.ok(profileService.enable2fa(request, token));
     }
 
     @PostMapping("/2fa/verify")
     @AuthRequired
-    public ResponseEntity<TOTPVerifyResponse> verify2fa(@Valid @RequestBody TOTPVerifyRequest request, @RequestHeader("Authorization") String authHeader) throws Exception {
-        final TOTPVerifyResponse response = profileService.verify2fa(request, authHeader);
-
-        return ResponseEntity.ok(response);
+    public ResponseEntity<TOTPVerifyResponse> verify2fa(@Valid @RequestBody TOTPVerifyRequest request, @Valid @CookieValue("auth_token") String token) throws Exception {
+        return ResponseEntity.ok(profileService.verify2fa(request, token));
     }
 }
