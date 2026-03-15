@@ -1,6 +1,7 @@
 package xyz.rynav.openveinsapi.config;
 
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.NonNull;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
@@ -16,7 +17,7 @@ public class DataSeeder implements ApplicationRunner {
     private final ConfigRepository configRepository;
 
     // TODO - Update the seeder to use a different, more flexible system.
-    private static final HashMap<String, String> DEFAULT_SETTINGS = new HashMap<String, String>() {{
+    private static final HashMap<String, String> DEFAULT_SETTINGS = new HashMap<>() {{
         put("cloudflare_turnstile_enabled", "false");
         put("cloudflare_turnstile_siteKey", "1x00000000000000000000AA");
         put("signup_enabled", "false");
@@ -24,7 +25,7 @@ public class DataSeeder implements ApplicationRunner {
     }};
 
     @Override
-    public void run(ApplicationArguments args){
+    public void run(@NonNull ApplicationArguments args){
         DEFAULT_SETTINGS.forEach((key, value) -> {
             if(configRepository.findByConfigName(key).isEmpty()) {
                 configRepository.save(Config.builder().configName(key).configValue(value).build());

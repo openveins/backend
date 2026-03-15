@@ -3,6 +3,7 @@ package xyz.rynav.openveinsapi.interceptors.auth;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.method.HandlerMethod;
@@ -11,19 +12,14 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import xyz.rynav.openveinsapi.exceptions.Auth.AuthException;
 import xyz.rynav.openveinsapi.services.JwtService;
 
-import java.util.logging.Logger;
-
-
 @Component
 public class AuthInterceptor implements HandlerInterceptor {
 
     @Autowired
     private JwtService jwtService;
 
-    private final Logger logger = Logger.getLogger(AuthInterceptor.class.getName());
-
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+    public boolean preHandle(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull Object handler) {
 
         if (!(handler instanceof HandlerMethod handlerMethod)) {
             return true;

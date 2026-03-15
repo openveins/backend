@@ -2,8 +2,6 @@ package xyz.rynav.openveinsapi.services;
 
 import jakarta.validation.Valid;
 import jakarta.validation.ValidationException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,12 +25,9 @@ public class ConfigService {
     @Autowired
     private ConfigRepository configRepository;
 
-    private final Logger logger = LogManager.getLogger(ConfigService.class.getName());
-
-
     // Always fail = 2x00000000000000000000AB
     // Always pass = 1x00000000000000000000AA
-    
+
     public PublicAuthConfig getPublicAuthConfig() {
 
         Optional<Config> cloudflareSiteKey = configRepository.findByConfigName("cloudflare_turnstile_siteKey");
