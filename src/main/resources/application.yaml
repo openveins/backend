@@ -33,6 +33,9 @@ spring:
           min-idle: 1
 
 
+application:
+  version: "@project.version@"
+
 server:
   tomcat:
     connection-timeout: 20s
