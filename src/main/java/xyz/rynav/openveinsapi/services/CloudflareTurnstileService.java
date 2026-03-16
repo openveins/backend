@@ -5,7 +5,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 import xyz.rynav.openveinsapi.DTOs.Auth.TurnstileResponse;
 import xyz.rynav.openveinsapi.exceptions.Auth.AuthException;

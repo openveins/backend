@@ -9,7 +9,6 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AuthResponse {
-    private boolean totpRequired;
-    private String message;
+public class OTPRequest {
+    private String code;
 }

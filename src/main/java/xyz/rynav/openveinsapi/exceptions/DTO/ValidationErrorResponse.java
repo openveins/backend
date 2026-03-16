@@ -2,7 +2,6 @@ package xyz.rynav.openveinsapi.exceptions.DTO;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.springframework.http.HttpStatus;
 
 import java.time.LocalDateTime;
 import java.util.Map;
