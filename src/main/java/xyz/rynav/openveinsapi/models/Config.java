@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "panelsettings")
+@Table(name = "panel_settings")
 @Data
 @Builder
 @NoArgsConstructor

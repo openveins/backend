@@ -4,10 +4,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import xyz.rynav.openveinsapi.DTOs.Profile.TOTP.TOTPEnableResponse;
 import xyz.rynav.openveinsapi.DTOs.Profile.TOTP.TOTPRequest;
 import xyz.rynav.openveinsapi.DTOs.Profile.TOTP.TOTPVerifyRequest;
-import xyz.rynav.openveinsapi.DTOs.Profile.TOTP.TOTPVerifyResponse;
 import xyz.rynav.openveinsapi.interceptors.auth.AuthRequired;
 import xyz.rynav.openveinsapi.services.ProfileService;
 
@@ -20,13 +18,13 @@ public class ProfileController {
 
     @PatchMapping("/2fa")
     @AuthRequired
-    public ResponseEntity<TOTPEnableResponse> enable2fa(@Valid @RequestBody TOTPRequest request, @Valid @CookieValue("auth_token") String token) throws Exception {
-        return ResponseEntity.ok(profileService.enable2fa(request, token));
+    public ResponseEntity<?> enable2fa(@Valid @RequestBody TOTPRequest request, @Valid @CookieValue("auth_token") String token) throws Exception {
+        return profileService.enable2fa(request, token);
     }
 
     @PostMapping("/2fa/verify")
     @AuthRequired
-    public ResponseEntity<TOTPVerifyResponse> verify2fa(@Valid @RequestBody TOTPVerifyRequest request, @Valid @CookieValue("auth_token") String token) throws Exception {
-        return ResponseEntity.ok(profileService.verify2fa(request, token));
+    public ResponseEntity<?> verify2fa(@Valid @RequestBody TOTPVerifyRequest request, @Valid @CookieValue("auth_token") String token) throws Exception {
+        return profileService.verify2fa(request, token);
     }
 }

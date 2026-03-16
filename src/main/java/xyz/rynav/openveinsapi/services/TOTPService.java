@@ -8,7 +8,10 @@ import org.springframework.stereotype.Service;
 import xyz.rynav.openveinsapi.exceptions.Auth.AuthException;
 import xyz.rynav.openveinsapi.models.OTPConfig;
 import xyz.rynav.openveinsapi.models.User;
+import xyz.rynav.openveinsapi.models.UserSettings.Settings;
+import xyz.rynav.openveinsapi.models.UserSettings.UserSettings;
 import xyz.rynav.openveinsapi.repositories.OTPRepository;
+import xyz.rynav.openveinsapi.repositories.UserSettingsRepository;
 
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
@@ -25,11 +28,11 @@ public class TOTPService {
     private final OTPRepository otpRepository;
     private final StringRedisTemplate stringRedisTemplate;
     private final SecretEncryptionService secretEncryptionService;
+    private final UserSettingsRepository userSettingsRepository;
 
     private static final long OTP_TTL = 90;
 
     public String setupTOTP(String userId, String userEmail) throws Exception {
-
         OTPConfig otpConfig = otpRepository.findByUserId(userId).orElse(null);
         String base32Key;
 
@@ -60,8 +63,12 @@ public class TOTPService {
 
     public boolean initialVerification(User user, String code) throws Exception {
         OTPConfig otpConfig = otpRepository.findByUserId(user.getId()).orElseThrow(() -> new Exception("User has no OTP setup."));
+        UserSettings userSettings = userSettingsRepository.findByUserId(user.getId()).orElseThrow(() -> new Exception("User has no user settings."));
+        Settings settings = userSettings.getSettings();
 
         if(otpConfig.isOtpEnabled() && otpConfig.isOtpVerified()) {
+            settings.setOtpEnabled(true);
+            userSettingsRepository.save(userSettings);
             throw new AuthException("OTP has already been verified.");
         }
 
@@ -73,6 +80,9 @@ public class TOTPService {
         otpConfig.setOtpVerified(true);
         otpConfig.setOtpVerificationPending(false);
         otpRepository.save(otpConfig);
+
+        settings.setOtpEnabled(true);
+        userSettingsRepository.save(userSettings);
 
         return true;
     }

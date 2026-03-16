@@ -15,12 +15,15 @@ import xyz.rynav.openveinsapi.DTOs.Auth.RegisterRequest;
 import xyz.rynav.openveinsapi.exceptions.Auth.AuthException;
 import xyz.rynav.openveinsapi.models.OTPConfig;
 import xyz.rynav.openveinsapi.models.User;
+import xyz.rynav.openveinsapi.models.UserSettings.UserSettings;
 import xyz.rynav.openveinsapi.repositories.OTPRepository;
 import xyz.rynav.openveinsapi.repositories.UserRepository;
+import xyz.rynav.openveinsapi.repositories.UserSettingsRepository;
 
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 
 @Service
 @RequiredArgsConstructor
@@ -32,6 +35,9 @@ public class AuthService {
     private final OTPRepository otpRepository;
     private final JwtService jwtService;
     private final TOTPService totpService;
+    private final UserSettingsRepository userSettingsRepository;
+
+    private final Logger logger = Logger.getLogger(this.getClass().getName());
 
     @Transactional
     public ResponseEntity<AuthResponse> login(LoginRequest request, HttpServletResponse response) throws Exception {
@@ -73,7 +79,7 @@ public class AuthService {
                 .build();
 
         response.setHeader(HttpHeaders.SET_COOKIE, cookie.toString());
-        AuthResponse finalResponse = AuthResponse.builder().totpRequired(false).message("TOTP verification is required!").build();
+        AuthResponse finalResponse = AuthResponse.builder().totpRequired(true).message("TOTP verification is required!").build();
         return ResponseEntity.ok(finalResponse);
     }
 
@@ -112,6 +118,7 @@ public class AuthService {
                 .httpOnly(true)
                 .sameSite("Strict")
                 .maxAge(86400)
+                .path("/")
                 .secure(true)
                 .build();
 
@@ -128,6 +135,7 @@ public class AuthService {
         return ResponseEntity.ok(Map.of("message", "Successfully logged in!"));
     }
 
+    @Transactional
     public ResponseEntity<?> register(RegisterRequest request, HttpServletResponse response) throws Exception {
         if(!cloudflareTurnstileService.verifyCaptchaToken(request.getCaptcha())){
             throw new AuthException("Invalid Captcha Token");
@@ -146,7 +154,12 @@ public class AuthService {
                 .password(passwordEncoder.encode(request.getPassword()))
                 .build();
 
+
         userRepository.save(user);
+
+        UserSettings userSettings = UserSettings.builder().userId(user.getId()).build();
+
+        userSettingsRepository.save(userSettings);
 
         String token = jwtService.generateToken(user);
 
@@ -163,6 +176,7 @@ public class AuthService {
 
     }
 
+    @Transactional
     public ResponseEntity<?> me(String token){
         if(token == null || token.isEmpty() || !jwtService.validateToken(token)){
             throw new AuthException("Invalid token");
@@ -170,13 +184,22 @@ public class AuthService {
 
         String subject = jwtService.getSubject(token);
 
-        Optional<User> user = userRepository.findById(subject);
+        User user = userRepository.findById(subject).orElse(null);
 
-        if(user.isEmpty()){
+        if(user == null) {
             throw new AuthException("User not found?");
         }
 
-        return ResponseEntity.ok(Map.of("username", user.get().getUsername(), "id",  user.get().getId(), "email", user.get().getEmail()));
+        UserSettings settings = userSettingsRepository.findByUserId(user.getId()).orElseThrow(() -> new AuthException("User not found"));
+
+        return ResponseEntity.ok(
+                Map.of(
+                        "username", user.getUsername(),
+                        "id",  user.getId(),
+                        "email", user.getEmail(),
+                        "settings", settings.getSettings()
+                )
+        );
     }
 
 }
