@@ -3,9 +3,11 @@ package xyz.rynav.openveinsapi.services;
 import jakarta.validation.Valid;
 import jakarta.validation.ValidationException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestBody;
+import xyz.rynav.openveinsapi.DTOs.ApiResponse;
 import xyz.rynav.openveinsapi.DTOs.Configs.ConfigPatchRequest;
 import xyz.rynav.openveinsapi.DTOs.Configs.ConfigPatchResponse;
 import xyz.rynav.openveinsapi.DTOs.Configs.PrivateConfigResponse;
@@ -28,7 +30,7 @@ public class ConfigService {
     // Always fail = 2x00000000000000000000AB
     // Always pass = 1x00000000000000000000AA
 
-    public PublicAuthConfig getPublicAuthConfig() {
+    public ResponseEntity<ApiResponse<PublicAuthConfig>> getPublicAuthConfig() {
 
         Optional<Config> cloudflareSiteKey = configRepository.findByConfigName("cloudflare_turnstile_siteKey");
         Optional<Config> cloudflareEnabled = configRepository.findByConfigName("cloudflare_turnstile_enabled");
@@ -44,16 +46,11 @@ public class ConfigService {
                 .map(Config::getConfigValue)
                 .orElse("");
 
-        return PublicAuthConfig.builder()
-                .turnstileEnabled(isTurnstileEnabled)
-                .turnstileSiteKey(siteKey)
-                .signupEnabled(isSignupEnabled)
-                .message("Success")
-                .build();
+        return ResponseEntity.ok(ApiResponse.ok("Success", new PublicAuthConfig(isTurnstileEnabled, siteKey, isSignupEnabled, "")));
     }
 
 
-    public ConfigPatchResponse patchConfig(@Valid @RequestBody ConfigPatchRequest payload) {
+    public ResponseEntity<ApiResponse<ConfigPatchResponse>> patchConfig(@Valid @RequestBody ConfigPatchRequest payload) {
 
         if(payload.getUpdates() == null ||  payload.getUpdates().isEmpty()){
             throw new ValidationException("Missing the updates field.");
@@ -76,13 +73,13 @@ public class ConfigService {
             }
         }
 
-        return ConfigPatchResponse.builder().warnings(warnings).updated(updated).build();
+        return ResponseEntity.ok(ApiResponse.ok("Success", new ConfigPatchResponse(updated, warnings, "")));
     }
 
-    public PrivateConfigResponse getConfig(){
+    public ResponseEntity<ApiResponse<PrivateConfigResponse>> getConfig(){
 
         List<Config> configs = configRepository.findAll();
 
-        return PrivateConfigResponse.builder().configList(configs).build();
+        return ResponseEntity.ok(ApiResponse.ok("Success", new PrivateConfigResponse(configs)));
     }
 }

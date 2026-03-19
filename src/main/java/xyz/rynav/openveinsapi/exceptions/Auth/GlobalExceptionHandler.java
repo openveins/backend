@@ -7,7 +7,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import xyz.rynav.openveinsapi.exceptions.DTO.ErrorResponse;
+import xyz.rynav.openveinsapi.DTOs.ApiResponse;
 import xyz.rynav.openveinsapi.exceptions.DTO.ValidationErrorResponse;
 
 import java.time.LocalDateTime;
@@ -20,15 +20,10 @@ public class GlobalExceptionHandler {
 
 
     @ExceptionHandler(value = AuthException.class)
-    public ResponseEntity<ErrorResponse> handleAuthException(AuthException ex) {
+    public ResponseEntity<ApiResponse<?>> handleAuthException(AuthException ex) {
         log.warn("Auth exception [{}]: {}", ex.getStatus(), ex.getMessage());
 
-        ErrorResponse error = new ErrorResponse(
-                ex.getStatus().value(),
-                ex.getMessage(),
-                LocalDateTime.now()
-        );
-        return new ResponseEntity<>(error, ex.getStatus());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.fail(ex.getMessage()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -44,23 +39,18 @@ public class GlobalExceptionHandler {
         });
 
         ValidationErrorResponse response = new ValidationErrorResponse(
-                HttpStatus.BAD_REQUEST.value(),
+                false,
                 "Validation failed",
                 errors,
-                LocalDateTime.now()
+                LocalDateTime.now().toString()
         );
-        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGenericException(Exception ex) {
+    public ResponseEntity<ApiResponse<?>> handleGenericException(Exception ex) {
         log.error("Unhandled exception: ", ex);
 
-        ErrorResponse error = new ErrorResponse(
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                "An unexpected error occurred",
-                LocalDateTime.now()
-        );
-        return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.fail("An unexpected error occured."));
     }
 }

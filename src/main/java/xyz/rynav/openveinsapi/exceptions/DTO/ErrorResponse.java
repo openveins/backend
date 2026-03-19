@@ -3,13 +3,11 @@ package xyz.rynav.openveinsapi.exceptions.DTO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
-import java.time.LocalDateTime;
-
 @Data
 @AllArgsConstructor
 public class ErrorResponse {
-    private int status;
+    private boolean success;
     private String message;
-    private LocalDateTime timestamp;
+    private String timestamp;
 
 }

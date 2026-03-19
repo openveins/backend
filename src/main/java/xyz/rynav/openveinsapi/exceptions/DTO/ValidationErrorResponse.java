@@ -10,8 +10,8 @@ import java.util.Map;
 @EqualsAndHashCode(callSuper = false)
 public class ValidationErrorResponse extends ErrorResponse {
     private Map<String, String> errors;
-    public ValidationErrorResponse(int status, String message, Map<String, String> errors, LocalDateTime timestamp) {
-        super(status, message, timestamp);
+    public ValidationErrorResponse(Boolean success, String message, Map<String, String> errors, String timestamp) {
+        super(success, message, timestamp);
         this.errors = errors;
     }
 }

@@ -3,6 +3,7 @@ package xyz.rynav.openveinsapi.interceptors.auth;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -12,6 +13,7 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import xyz.rynav.openveinsapi.exceptions.Auth.AuthException;
 import xyz.rynav.openveinsapi.services.JwtService;
 
+@Slf4j
 @Component
 public class AuthInterceptor implements HandlerInterceptor {
 
@@ -31,6 +33,7 @@ public class AuthInterceptor implements HandlerInterceptor {
             return true;
         }
 
+
         String token = null;
         Cookie[] cookies = request.getCookies();
         if(cookies != null){
@@ -39,6 +42,7 @@ public class AuthInterceptor implements HandlerInterceptor {
                     token = cookie.getValue();
                 }
             }
+
         }else{
             throw new AuthException("Invalid token", HttpStatus.UNAUTHORIZED);
         }

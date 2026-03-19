@@ -54,7 +54,7 @@ public class AuthController {
 
     @GetMapping("/me")
     @AuthRequired
-    public ResponseEntity<?> me(@Valid @CookieValue("auth_token") String token) {
+    public ResponseEntity<?> me(@CookieValue("auth_token") String token) {
         return authService.me(token);
     }
 }

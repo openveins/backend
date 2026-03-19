@@ -8,10 +8,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import xyz.rynav.openveinsapi.DTOs.Auth.AuthResponse;
-import xyz.rynav.openveinsapi.DTOs.Auth.LoginRequest;
-import xyz.rynav.openveinsapi.DTOs.Auth.OTPRequest;
-import xyz.rynav.openveinsapi.DTOs.Auth.RegisterRequest;
+import xyz.rynav.openveinsapi.DTOs.ApiResponse;
+import xyz.rynav.openveinsapi.DTOs.Auth.*;
 import xyz.rynav.openveinsapi.exceptions.Auth.AuthException;
 import xyz.rynav.openveinsapi.models.OTPConfig;
 import xyz.rynav.openveinsapi.models.User;
@@ -20,7 +18,6 @@ import xyz.rynav.openveinsapi.repositories.OTPRepository;
 import xyz.rynav.openveinsapi.repositories.UserRepository;
 import xyz.rynav.openveinsapi.repositories.UserSettingsRepository;
 
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
@@ -40,17 +37,22 @@ public class AuthService {
     private final Logger logger = Logger.getLogger(this.getClass().getName());
 
     @Transactional
-    public ResponseEntity<AuthResponse> login(LoginRequest request, HttpServletResponse response) throws Exception {
+    public ResponseEntity<ApiResponse<AuthResponse>> login(LoginRequest request, HttpServletResponse response) throws Exception {
 
         if(!cloudflareTurnstileService.verifyCaptchaToken(request.getCaptcha())){
-            throw new AuthException("Invalid Captcha Token");
+            throw new AuthException("Captcha verification failed");
         }
 
-        User user = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new AuthException("Invalid email or password"));
+        User user = userRepository.findByEmail(request.getEmail()).orElse(null);
+
+        if(user == null){
+            TimeUnit.SECONDS.sleep(2);
+            throw new AuthException("Invalid username or password");
+        }
 
         if(!passwordEncoder.matches(request.getPassword(), user.getPassword())){
             TimeUnit.SECONDS.sleep(2);
-            throw new AuthException("Invalid email or password");
+            throw new AuthException("Invalid username or password");
         }
 
         String token;
@@ -66,8 +68,7 @@ public class AuthService {
                     .build();
 
             response.setHeader(HttpHeaders.SET_COOKIE, cookie.toString());
-            AuthResponse finalResponse = AuthResponse.builder().totpRequired(false).message("Successfully logged in!").build();
-            return ResponseEntity.ok(finalResponse);
+            return ResponseEntity.ok(ApiResponse.ok("Successfully logged in!", new AuthResponse(false)));
         }
 
         token = jwtService.generateOTPToken(user.getId());
@@ -79,13 +80,12 @@ public class AuthService {
                 .build();
 
         response.setHeader(HttpHeaders.SET_COOKIE, cookie.toString());
-        AuthResponse finalResponse = AuthResponse.builder().totpRequired(true).message("TOTP verification is required!").build();
-        return ResponseEntity.ok(finalResponse);
+        return ResponseEntity.ok(ApiResponse.ok("TOTP verification is required!!", new AuthResponse(true)));
     }
 
-    public ResponseEntity<?> login2fa(OTPRequest request, HttpServletResponse response, String totpToken) throws Exception {
+    public ResponseEntity<ApiResponse<AuthResponse>> login2fa(OTPRequest request, HttpServletResponse response, String totpToken) throws Exception {
         if(totpToken == null || totpToken.isEmpty() || !jwtService.validateToken(totpToken)){
-            throw new AuthException("Invalid token");
+            throw new AuthException("Invalid TOTP token");
         }
 
         if(request.getCode().isBlank()){
@@ -93,26 +93,26 @@ public class AuthService {
         }
 
         String subject = jwtService.getSubject(totpToken);
-        Optional<User> user =  userRepository.findById(subject);
+        User user =  userRepository.findById(subject).orElse(null);
 
-        if(user.isEmpty()){
-            throw new AuthException("User not found");
+        if(user == null){
+            throw new Exception("User not found.");
         }
 
         int code;
         try{
             code = Integer.parseInt(request.getCode());
         } catch(NumberFormatException e){
-            throw new AuthException("Invalid code");
+            throw new AuthException("Invalid code format");
         }
 
         boolean verified = totpService.verifyCode(subject, code);
 
         if(!verified){
-            throw new AuthException("Invalid code");
+            throw new AuthException("Provided code is invalid!");
         }
 
-        String token = jwtService.generateToken(user.get());
+        String token = jwtService.generateToken(user);
 
         ResponseCookie cookie = ResponseCookie.from("auth_token", token)
                 .httpOnly(true)
@@ -132,20 +132,20 @@ public class AuthService {
 
         response.setHeader(HttpHeaders.SET_COOKIE, cookie.toString());
         response.addHeader(HttpHeaders.SET_COOKIE, clearTotp.toString());
-        return ResponseEntity.ok(Map.of("message", "Successfully logged in!"));
+        return ResponseEntity.ok(ApiResponse.ok("Successfully logged in!", null));
     }
 
     @Transactional
-    public ResponseEntity<?> register(RegisterRequest request, HttpServletResponse response) throws Exception {
+    public ResponseEntity<ApiResponse<?>> register(RegisterRequest request, HttpServletResponse response) throws Exception {
         if(!cloudflareTurnstileService.verifyCaptchaToken(request.getCaptcha())){
             throw new AuthException("Invalid Captcha Token");
         }
 
         if(userRepository.existsByEmail(request.getEmail())){
-            throw new AuthException("Email already exists");
+            throw new AuthException("Email is used already");
         }
         if(userRepository.existsByUsername(request.getUsername())){
-            throw new AuthException("Username already exists");
+            throw new AuthException("Username is used already");
         }
 
         User user = User.builder()
@@ -172,12 +172,12 @@ public class AuthService {
                 .build();
 
         response.setHeader(HttpHeaders.SET_COOKIE, cookie.toString());
-        return ResponseEntity.ok(Map.of("message", "Successfully signed up!"));
+        return ResponseEntity.ok(ApiResponse.ok("Successfully registered!", null));
 
     }
 
     @Transactional
-    public ResponseEntity<?> me(String token){
+    public ResponseEntity<ApiResponse<MeResponse>> me(String token){
         if(token == null || token.isEmpty() || !jwtService.validateToken(token)){
             throw new AuthException("Invalid token");
         }
@@ -193,12 +193,7 @@ public class AuthService {
         UserSettings settings = userSettingsRepository.findByUserId(user.getId()).orElseThrow(() -> new AuthException("User not found"));
 
         return ResponseEntity.ok(
-                Map.of(
-                        "username", user.getUsername(),
-                        "id",  user.getId(),
-                        "email", user.getEmail(),
-                        "settings", settings.getSettings()
-                )
+                ApiResponse.ok("Success", new MeResponse(user.getId(), user.getUsername(), user.getEmail(), settings.getSettings()))
         );
     }
 
